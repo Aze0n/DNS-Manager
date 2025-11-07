@@ -1,0 +1,12 @@
+fastapi==0.120.4
+uvicorn==0.38.0
+sqlmodel==0.0.27
+SQLAlchemy==2.0.44
+python-dotenv==1.2.1
+requests==2.32.5
+cryptography==46.0.3
+argon2-cffi==25.1.0
+dns-lexicon==3.21.1
+dnspython==2.8.0
+pydantic==2.12.3
+itsdangerous==2.2.0

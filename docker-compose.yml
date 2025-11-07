@@ -1,0 +1,37 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dns-manager-backend:latest
+    env_file:
+      - .env
+    environment:
+      - UVICORN_HOST=0.0.0.0
+      - UVICORN_PORT=8000
+    volumes:
+      - ./secrets:/app/secrets
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    image: dns-manager-web:latest
+    depends_on:
+      - backend
+    environment:
+      # 1 = echte certs notwendig; 0 = self-signed automatisch
+      - STRICT_TLS=0
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./certs:/certs
+    restart: unless-stopped
+
+networks:
+  default:
+    driver: bridge

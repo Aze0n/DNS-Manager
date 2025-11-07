@@ -1,0 +1,18 @@
+# VCS
+.git
+
+# Python caches
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+# Node
+frontend/node_modules
+
+# Local artifacts
+frontend/dist
+release
+.vscode
+secrets
+certs
