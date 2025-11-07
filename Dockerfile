@@ -15,7 +15,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app/ app/
 COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY docker/90-handle-env.sh /docker-entrypoint.d/90-handle-env.sh
+RUN chmod +x /entrypoint.sh /docker-entrypoint.d/90-handle-env.sh && \
+    mkdir -p /docker-entrypoint.d
 
 EXPOSE 8000
 CMD ["/entrypoint.sh"]

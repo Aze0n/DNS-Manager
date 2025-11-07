@@ -62,3 +62,35 @@ self-signed cert erzeugen
 mkdir certs
 openssl req -x509 -nodes -newkey rsa:2048 -days 365 -subj "/CN=localhost" -keyout certs/key.pem -out certs/cert.pem
 ```
+separate docker images
+
+backend
+```
+docker build -t dns-manager-backend .
+docker run -d --name backend -v ./secrets:/app/secrets dns-manager-backend
+```
+
+frontend  
+```
+docker build -f Dockerfile.frontend -t dns-manager-frontend .
+docker run -d --name frontend -p 443:443 -p 80:80 -v ./certs:/certs --link backend dns-manager-frontend
+```
+
+verteilte systeme
+```
+# backend auf system A
+docker run -d -p 8000:8000 --name backend dns-manager-backend
+
+# frontend auf system B  
+docker run -d -p 443:443 -p 80:80 -e BACKEND_HOST=192.168.1.100 -e BACKEND_PORT=8000 dns-manager-frontend
+```
+
+tls parameter
+- mount ./certs mit cert.pem + key.pem
+- oder base64 env vars: CERT_PEM_B64, KEY_PEM_B64
+- STRICT_TLS=1 erzwingt echte certs
+
+secrets handling
+- priorität: env > /run/secrets/SECRET_KEY > SECRET_KEY_FILE > generiert/persistent
+- generierte keys werden in /app/secrets/secret.key gespeichert
+- für produktion: docker secrets oder gemountete dateien verwenden

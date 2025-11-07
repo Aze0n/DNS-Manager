@@ -1,5 +1,5 @@
 #!/bin/sh
-# erzeugt self-signed cert wenn keins vorhanden und STRICT_TLS!=1
+# self-signed cert generieren falls keins vorhanden und STRICT_TLS!=1
 set -e
 CERT_PATH="${CERT_DIR:-/certs}"
 CF="$CERT_PATH/${CERT_FILE:-cert.pem}"
@@ -11,7 +11,7 @@ if [ ! -f "$CF" ] || [ ! -f "$KF" ]; then
     echo "[strict tls] fehlende cert-dateien: $CF / $KF" >&2
     exit 1
   fi
-  echo "kein cert gefunden -> self-signed generieren"
+  echo "self-signed cert generieren"
   openssl req -x509 -nodes -newkey rsa:2048 -days 365 \
     -subj "/CN=localhost" \
     -keyout "$KF" -out "$CF" >/dev/null 2>&1 || {
@@ -19,5 +19,3 @@ if [ ! -f "$CF" ] || [ ! -f "$KF" ]; then
       exit 1
     }
 fi
-
-# nginx startet automatisch danach
