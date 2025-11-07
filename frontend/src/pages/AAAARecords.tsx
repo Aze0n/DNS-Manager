@@ -27,10 +27,10 @@ const AAAARecords: React.FC<AAAARecordsProps> = ({ selectedDomain }) => {
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2>AAAA-Einträge</h2>
+  <h2>AAAA-Records</h2>
         <div>
           <button className="btn btn-secondary" onClick={() => { setModalName(""); setModalContent(""); setModalTTL(undefined); setModalDyndns(false); setShowModal(true); }}>
-            neuer eintrag
+            Neuer Eintrag
           </button>
         </div>
       </div>
@@ -39,19 +39,19 @@ const AAAARecords: React.FC<AAAARecordsProps> = ({ selectedDomain }) => {
         <table className="table table-striped table-sm">
           <thead>
             <tr>
-              <th>domain</th>
-              <th>name</th>
-              <th>typ</th>
-              <th>ziel</th>
-              <th>ttl</th>
-              <th>dyn-dns</th>
-              <th>aktionen</th>
+              <th>Domain</th>
+              <th>Name</th>
+              <th>Typ</th>
+              <th>Ziel</th>
+              <th>TTL</th>
+              <th>DynDNS</th>
+              <th>Aktionen</th>
             </tr>
           </thead>
           <tbody>
             {records.length === 0 && (
               <tr>
-                <td colSpan={7} className="text-muted">noch keine daten</td>
+                <td colSpan={7} className="text-muted">Keine Daten vorhanden.</td>
               </tr>
             )}
             {records.map((r, idx) => (
@@ -68,16 +68,22 @@ const AAAARecords: React.FC<AAAARecordsProps> = ({ selectedDomain }) => {
                     return (
                       <input type="checkbox" checked={!!r.dyndns} disabled={isPending} onChange={async (e) => {
                         const newVal = e.target.checked;
+                        setLoading(true);
                         setPendingKeys(prev => [...prev, key]);
                         try {
                           const res = await fetch(`/api/records`, { method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ domain: r.domain, name: r.name, type: r.type, dyndns: newVal }) });
-                          if (!res.ok) throw new Error('update failed');
+                          if (!res.ok) {
+                            let msg = 'Update der DynDNS-Einstellung fehlgeschlagen.';
+                            try { const err = await res.json().catch(() => null); const d = err?.detail ?? err?.message; if (typeof d === 'string') msg = d; } catch {}
+                            throw new Error(msg);
+                          }
                           const list = await getRecordsForDomain('AAAA', selectedDomain);
                           setRecords(list.records || []);
                         } catch (err) {
-                          alert('Fehler beim Aktualisieren');
+                          alert((err as any)?.message || 'Fehler beim Aktualisieren.');
                         } finally {
                           setPendingKeys(prev => prev.filter(k => k !== key));
+                          setLoading(false);
                         }
                       }} />
                     );
@@ -85,17 +91,17 @@ const AAAARecords: React.FC<AAAARecordsProps> = ({ selectedDomain }) => {
                 </td>
                 <td>
                   <button className="btn btn-sm btn-outline-secondary" onClick={async () => {
-                    if (!confirm(`Lösche Eintrag ${r.name} ${r.type} -> ${r.content} ?`)) return;
+                    if (!confirm(`Eintrag wirklich löschen? ${r.name} ${r.type} → ${r.content}`)) return;
                     setLoading(true);
                     try {
                       await fetch(`/api/records`, { method: 'DELETE', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(r) });
                       setRecords(prev => prev.filter(x => !(x.domain === r.domain && x.name === r.name && x.type === r.type && x.content === r.content)));
                     } catch (e: any) {
-                      alert(e?.message || 'fehler beim löschen');
+                      alert(e?.message || 'Fehler beim Löschen.');
                     } finally {
                       setLoading(false);
                     }
-                  }}>löschen</button>
+                  }}>Löschen</button>
                 </td>
               </tr>
             ))}
@@ -110,22 +116,22 @@ const AAAARecords: React.FC<AAAARecordsProps> = ({ selectedDomain }) => {
             <div className="modal-dialog">
                 <div className="modal-content p-3">
                 <div className="modal-header">
-                  <h5 className="modal-title">neuer AAAA-Eintrag</h5>
+                  <h5 className="modal-title">Neuer AAAA-Record</h5>
                   <button className="btn-close" onClick={() => setShowModal(false)} />
                 </div>
                 <div className="modal-body">
                   <form onSubmit={async (e) => {
                     e.preventDefault();
-                    if (!selectedDomain) { alert('Keine Domain ausgewählt'); return; }
+                    if (!selectedDomain) { alert('Bitte wähle eine Domain aus.'); return; }
                     const name = modalName.trim();
                     let content = modalContent.trim();
                     const ttlStr = modalTTL ?? '';
                     const ttl = ttlStr ? parseInt(ttlStr as string, 10) : undefined;
                     const dyndns = modalDyndns;
-                    if (!name) { alert('Name darf nicht leer sein'); return; }
-                    if (!content && !dyndns) { alert('Ziel darf nicht leer sein'); return; }
-                    if (!ttlStr) { alert('TTL darf nicht leer sein'); return; }
-                    if (isNaN(Number(ttl)) || (ttl !== undefined && ttl <= 0)) { alert('TTL muss eine positive ganze Zahl sein'); return; }
+                    if (!name) { alert('Bitte gib einen Namen (Subdomain) ein.'); return; }
+                    if (!content && !dyndns) { alert('Bitte gib ein Ziel (IP-Adresse) ein.'); return; }
+                    if (!ttlStr) { alert('Bitte gib eine TTL an.'); return; }
+                    if (isNaN(Number(ttl)) || (ttl !== undefined && ttl <= 0)) { alert('TTL muss eine positive ganze Zahl sein.'); return; }
                     setLoading(true);
                     try {
                       const payload: any = { type: 'AAAA', name, content };
@@ -144,13 +150,13 @@ const AAAARecords: React.FC<AAAARecordsProps> = ({ selectedDomain }) => {
                       }
 
                       const res = await fetch(`/api/domains/${selectedDomain}/records`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                      if (!res.ok) throw new Error((await res.json()).detail || 'fehler');
+                      if (!res.ok) { let msg='Erstellen fehlgeschlagen.'; try{const err=await res.json().catch(()=>null); const d=err?.detail??err?.message; if(typeof d==='string') msg=d;}catch{} throw new Error(msg);} 
                       const body = await res.json();
                       setRecords(prev => [{ domain: selectedDomain, name, type: 'AAAA', content, ttl, dyndns }, ...prev]);
                       setShowModal(false);
-                      alert(body.message || 'Eintrag erstellt');
+                      alert(body.message || 'Record erstellt.');
                     } catch (err: any) {
-                      alert(err?.message || 'fehler beim erstellen');
+                      alert(err?.message || 'Fehler beim Erstellen.');
                     } finally {
                       setLoading(false);
                     }
@@ -172,8 +178,8 @@ const AAAARecords: React.FC<AAAARecordsProps> = ({ selectedDomain }) => {
                       <label className="form-check-label" htmlFor="dyndnsCheckAAAA">DynDNS aktiv (auto)</label>
                     </div>
                     <div className="d-flex justify-content-end">
-                      <button type="button" className="btn btn-secondary me-2" onClick={() => setShowModal(false)}>abbrechen</button>
-                      <button type="submit" className="btn btn-primary">erstellen</button>
+                      <button type="button" className="btn btn-secondary me-2" onClick={() => setShowModal(false)}>Abbrechen</button>
+                      <button type="submit" className="btn btn-primary">Erstellen</button>
                     </div>
                   </form>
                 </div>
