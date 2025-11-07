@@ -8,7 +8,7 @@ RUN cd frontend && npm ci
 COPY frontend/ frontend/
 RUN cd frontend && npm run build
 
-FROM nginx:1.27-alpine
+FROM nginx:1.27-bookworm
 ENV STRICT_TLS=0 \
     CERT_DIR=/certs \
     CERT_FILE=cert.pem \
@@ -23,7 +23,10 @@ COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
 # script zur cert-erzeugung (nur dev)
 COPY docker/nginx/entrypoint.sh /docker-entrypoint.d/99-gen-selfsigned.sh
 RUN chmod +x /docker-entrypoint.d/99-gen-selfsigned.sh
-RUN apk add --no-cache openssl
+# openssl für self-signed
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends openssl \
+ && rm -rf /var/lib/apt/lists/*
 
 EXPOSE 443
 
