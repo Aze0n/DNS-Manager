@@ -13,7 +13,8 @@ ENV STRICT_TLS=0 \
     CERT_DIR=/certs \
     CERT_FILE=cert.pem \
     KEY_FILE=key.pem \
-    BACKEND_HOST=backend \
+    # default: connect to host (when docker run -p 8000:8000 used for backend)
+    BACKEND_HOST=host.docker.internal \
     BACKEND_PORT=8000
 
 # statische files
@@ -28,7 +29,10 @@ COPY docker/nginx/98-write-certs-from-env.sh /docker-entrypoint.d/98-write-certs
 COPY docker/nginx/97-update-backend-upstream.sh /docker-entrypoint.d/97-update-backend-upstream.sh
 RUN chmod +x /docker-entrypoint.d/99-gen-selfsigned.sh \
     /docker-entrypoint.d/98-write-certs-from-env.sh \
-    /docker-entrypoint.d/97-update-backend-upstream.sh
+    /docker-entrypoint.d/97-update-backend-upstream.sh && \
+    sed -i 's/\r$//' /docker-entrypoint.d/99-gen-selfsigned.sh || true && \
+    sed -i 's/\r$//' /docker-entrypoint.d/98-write-certs-from-env.sh || true && \
+    sed -i 's/\r$//' /docker-entrypoint.d/97-update-backend-upstream.sh || true
 # openssl für self-signed
 RUN apt-get update \
  && apt-get install -y --no-install-recommends openssl \

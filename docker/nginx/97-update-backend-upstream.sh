@@ -1,7 +1,7 @@
 #!/bin/sh
 # backend-upstream aus env vars aktualisieren
 set -e
-HOST=${BACKEND_HOST:-backend}
+HOST=${BACKEND_HOST:-host.docker.internal}
 PORT=${BACKEND_PORT:-8000}
 
 # nginx.conf template ersetzen

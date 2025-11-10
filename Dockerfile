@@ -17,6 +17,8 @@ COPY app/ app/
 COPY docker/entrypoint.sh /entrypoint.sh
 COPY docker/90-handle-env.sh /docker-entrypoint.d/90-handle-env.sh
 RUN chmod +x /entrypoint.sh /docker-entrypoint.d/90-handle-env.sh && \
+    # remove possible windows crlf from scripts to avoid /bin/sh errors
+    sed -i 's/\r$//' /entrypoint.sh /docker-entrypoint.d/90-handle-env.sh || true && \
     mkdir -p /docker-entrypoint.d
 
 EXPOSE 8000

@@ -4,11 +4,17 @@ services:
       context: .
       dockerfile: Dockerfile
     image: dns-manager-backend:latest
-    env_file:
-      - .env
     environment:
-      - UVICORN_HOST=0.0.0.0
-      - UVICORN_PORT=8000
+      - UVICORN_HOST=${UVICORN_HOST:-0.0.0.0}
+      - UVICORN_PORT=${UVICORN_PORT:-8000}
+      # sicherheitsverhalten: 1 = prod (erfordert secrets), 0 = auto-generate
+      - SECURE_MODE=${SECURE_MODE:-0}
+      # cors: expliziter origin (z.b. https://example.com), leer = *
+      - FRONTEND_ORIGIN=${FRONTEND_ORIGIN:-}
+      - ALLOW_ORIGINS=${ALLOW_ORIGINS:-}
+      # optional: secret/master key (oder via docker secrets/volumes)
+      - SECRET_KEY=${SECRET_KEY:-}
+      - MASTER_KEY=${MASTER_KEY:-}
     volumes:
       - ./secrets:/app/secrets
     expose:
@@ -24,7 +30,15 @@ services:
       - backend
     environment:
       # 1 = echte certs notwendig; 0 = self-signed automatisch
-      - STRICT_TLS=0
+      - STRICT_TLS=${STRICT_TLS:-0}
+      # backend-standort (default: interner service-name)
+      - BACKEND_HOST=${BACKEND_HOST:-backend}
+      - BACKEND_PORT=${BACKEND_PORT:-8000}
+      # tls-übergabe als base64 (optional, falls kein volumen genutzt)
+      - CERT_PEM_B64=${CERT_PEM_B64:-}
+      - KEY_PEM_B64=${KEY_PEM_B64:-}
+      # cn für self-signed cert
+      - CERT_CN=${CERT_CN:-localhost}
     ports:
       - "443:443"
       - "80:80"

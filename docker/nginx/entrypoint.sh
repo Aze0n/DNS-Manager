@@ -4,6 +4,7 @@ set -e
 CERT_PATH="${CERT_DIR:-/certs}"
 CF="$CERT_PATH/${CERT_FILE:-cert.pem}"
 KF="$CERT_PATH/${KEY_FILE:-key.pem}"
+CN_VALUE="${CERT_CN:-localhost}"
 
 mkdir -p "$CERT_PATH"
 if [ ! -f "$CF" ] || [ ! -f "$KF" ]; then
@@ -13,7 +14,7 @@ if [ ! -f "$CF" ] || [ ! -f "$KF" ]; then
   fi
   echo "self-signed cert generieren"
   openssl req -x509 -nodes -newkey rsa:2048 -days 365 \
-    -subj "/CN=localhost" \
+    -subj "/CN=${CN_VALUE}" \
     -keyout "$KF" -out "$CF" >/dev/null 2>&1 || {
       echo "cert generation fehlgeschlagen" >&2
       exit 1
